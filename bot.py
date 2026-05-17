@@ -3,24 +3,37 @@ import websockets
 import json
 import time
 import sys
+import random
+
+# Define all active server ports here
+SERVER_PORTS = [8765, 8766] 
 
 async def run_resilient_bot(bot_id, bot_index):
-    # This bot will pick a port based on its index
-    # (e.g., Bot 0 -> 8765, Bot 1 -> 8766, Bot 2 -> 8765...)
-    port = 8765 + (bot_index % 2) 
+    # Dynamically distribute bots across whatever ports are in SERVER_PORTS
+    port = SERVER_PORTS[bot_index % len(SERVER_PORTS)]
     uri = f"ws://localhost:{port}"
+    
     while True:
         try:
-            # 1. Attempt to connect to the Exchange
             async with websockets.connect(uri) as websocket:
-                print(f"✅ {bot_id} connected to port {port}.") # Updated to print the port
+                print(f"✅ {bot_id} connected to port {port}.")
                 
                 while True:
-                    # 2. Prepare the order data
+                    # Determine side based on bot index (Even = BUY, Odd = SELL)
+                    side = "BUY" if bot_index % 2 == 0 else "SELL"
+                    
+                    # Generate a realistic random price around $150.00
+                    if side == "BUY":
+                        price = round(random.uniform(149.00, 150.50), 2)
+                    else:
+                        price = round(random.uniform(149.50, 151.00), 2)
+                    
+                    # Prepare the dynamic order data
                     order_data = {
                         "bot_id": bot_id,
                         "symbol": "AAPL",
-                        "price": 150.25,
+                        "side": side,      
+                        "price": price,    
                         "quantity": 10
                     }
                     
@@ -34,9 +47,9 @@ async def run_resilient_bot(bot_id, bot_index):
                     # ----------------------------------
                     
                     latency_ms = (end_time - start_time) * 1000
-                    print(f"⏱️ {bot_id} (Port {port}) latency: {latency_ms:.2f} ms")
+                    print(f"⏱️ {bot_id} ({side} @ ${price:.2f}) -> Port {port} | Latency: {latency_ms:.2f} ms")
                     
-                    # 4. Take a breath before the next order
+                    # Take a breath before sending the next order
                     await asyncio.sleep(1) 
                     
         except Exception as e:
@@ -49,7 +62,6 @@ async def main():
     
     for i in range(num_bots):
         bot_id = f"bot_{i:03d}"
-        # FIXED: Added 'i' as the second argument so the bot knows its index
         tasks.append(run_resilient_bot(bot_id, i))
         
         # Tiny stagger to avoid overwhelming the network card at start

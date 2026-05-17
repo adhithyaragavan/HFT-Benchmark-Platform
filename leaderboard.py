@@ -1,62 +1,70 @@
 import redis
 import time
 import os
-
+import json
 
 def clear_screen():
-    # Clears the terminal screen for a smooth visual update
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def main():
     try:
-        # Connect to the same Redis instance
         r = redis.Redis(host='localhost', port=6379, decode_responses=True)
         r.ping()
     except redis.ConnectionError:
-        print("❌ Leaderboard cannot connect to Redis. Make sure Redis is running!")
+        print("❌ Dashboard cannot connect to Redis!")
         return
-
-    print("📊 Real-Time Exchange Leaderboard Initialized...")
-    time.sleep(1)
 
     while True:
         try:
-            # 1. Fetch all keys that store bot scores
-            keys = r.keys("score:bot_*")
+            # 1. Fetch top 5 Bids (BUYS) and top 5 Asks (SELLS)
+            raw_bids = r.zrange("book:buy", 0, 4, withscores=True)
+            raw_asks = r.zrange("book:sell", 0, 4, withscores=True)
             
-            leaderboard_data = []
-            for key in keys:
-                bot_id = key.split(":")[1] # Extracts 'bot_001' from 'score:bot_001'
-                score = int(r.get(key) or 0)
-                leaderboard_data.append((bot_id, score))
+            # 2. Extract out just the prices using abs() for the buy bids
+            bids = [abs(score) for _, score in raw_bids]
+            asks = [score for _, score in raw_asks]
             
-            # 2. Sort the leaderboard by score descending
-            leaderboard_data.sort(key=lambda x: x[1], reverse=True)
-            
-            # 3. Render the UI
             clear_screen()
-            print("========================================")
-            print("       🏆 HACKATHON LIVE LEADERBOARD 🏆  ")
-            print("========================================")
-            print(f" {'Rank':<6} | {'Bot ID':<12} | {'Total Orders Placed':<15}")
-            print("----------------------------------------")
+            print("==================================================")
+            print("       🏛️  DISTRIBUTED ORDER BOOK DEPTH 🏛️        ")
+            print("==================================================")
+            print(f" {'  BIDS (BUY)  ':^22} | {'  ASKS (SELL) ':^22} ")
+            print("--------------------------------------------------")
             
-            # Display the Top 10 bots
-            for rank, (bot_id, score) in enumerate(leaderboard_data[:10], start=1):
-                print(f" #{rank:<4} | {bot_id:<12} | {score:<15,}")
+            # Display rows side by side
+            for i in range(5):
+                bid_str = f"${bids[i]:.2f}" if i < len(bids) else "---"
+                ask_str = f"${asks[i]:.2f}" if i < len(asks) else "---"
+                # Highlight the top row (best available prices) with arrows
+                if i == 0 and (bids or asks):
+                    print(f" 🟢 Best: {bid_str:<11} |  🔴 Best: {ask_str:<11}")
+                else:
+                    print(f"       {bid_str:<11} |         {ask_str:<11}")
+                    
+            print("--------------------------------------------------")
+            
+            # 3. Calculate and display the spread
+            if bids and asks:
+                spread = asks[0] - bids[0]
+                print(f" 🏁 Current Market Spread: ${spread:.2f}")
+            else:
+                print(" 🏁 Current Market Spread: Waiting for liquidity...")
                 
-            print("----------------------------------------")
-            print(f"Active Bots Tracking: {len(leaderboard_data)}")
-            print("🔄 Updating every 0.5 seconds... Press Ctrl+C to exit.")
+            print("==================================================")
             
-            # Refresh rate
-            time.sleep(0.5)
+            # Count remaining items in queue
+            total_bids = r.zcard("book:buy")
+            total_asks = r.zcard("book:sell")
+            print(f" Resting Orders Queue -> Bids: {total_bids} | Asks: {total_asks}")
+            print(" 🔄 Refreshing... Press Ctrl+C to close.")
+            
+            time.sleep(0.3)
             
         except KeyboardInterrupt:
-            print("\n👋 Leaderboard closed.")
+            print("\n👋 Dashboard closed.")
             break
         except Exception as e:
-            print(f"⚠️ Error updating leaderboard: {e}")
+            print(f"⚠️ Dashboard error: {e}")
             time.sleep(2)
 
 if __name__ == "__main__":
