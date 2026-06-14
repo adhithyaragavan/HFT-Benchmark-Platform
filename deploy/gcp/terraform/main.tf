@@ -149,7 +149,7 @@ resource "google_container_node_pool" "primary_nodes" {
 
     # Enable gVisor on the nodes
     sandbox_config {
-      type = "GVISOR"
+      sandbox_type = "gvisor"
     }
 
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.

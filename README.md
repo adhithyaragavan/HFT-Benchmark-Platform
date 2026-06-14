@@ -1,134 +1,176 @@
 # IICPC 2026 — Exchange Benchmark Arena
 
-> A Distributed Benchmarking and Hosting Platform for evaluating contestant-submitted trading infrastructure.
+> A High-Performance, Distributed Benchmarking and Hosting Platform for evaluating contestant-submitted trading infrastructure.
+
+---
 
 ## Architecture Overview
 
+The platform uses a decoupled, event-driven C++20 microservices architecture to process submissions, generate trading load, audit correctness, and stream live standings updates:
+
 ```
 ┌─────────────┐     ┌──────────────┐     ┌───────────────┐
-│   Frontend   │────▶│   Gateway    │────▶│ Submission Svc│──▶ MinIO
-│  (React+WS)  │     │   (chi)      │     │  (Upload/DB)  │
+│   Frontend   │────▶│ API Gateway  │────▶│ Submission Svc│──▶ MinIO / GCS
+│  (React+WS)  │     │ (Drogon C++) │     │ (Drogon C++ ) │
 └──────┬───────┘     └──────┬───────┘     └───────────────┘
        │                    │
        │ WebSocket          │ REST
        ▼                    ▼
 ┌──────────────┐     ┌──────────────┐     ┌───────────────┐
 │ Leaderboard  │◀────│  Sandbox Mgr │────▶│  Contestant   │
-│  Service     │     │ (Kaniko/K8s) │     │   Exchange    │
-│ (Redis PubSub)     └──────────────┘     │  (gVisor Pod) │
+│  Service     │     │ (Drogon C++) │     │   Exchange    │
+│ (Redis PubSub)     └──────────────┘     │ (gVisor Pod)  │
 └──────────────┘                          └───────┬───────┘
        ▲                                          │
        │ Redis                                    │ HTTP
        │                                          ▼
 ┌──────────────┐     ┌──────────────┐     ┌───────────────┐
-│   Scoring    │◀────│  Redpanda    │◀────│  Bot Worker   │
-│   Engine     │     │  (Streaming) │     │ (1000+ bots)  │
+│   Scoring    │◀────│   Redpanda   │◀────│  Bot Worker   │
+│    Engine    │     │  (Streaming) │     │ (1000+ bots)  │
 │ (HDR Histo)  │     └──────────────┘     └───────────────┘
 └──────────────┘                                  ▲
        │                                          │
        ▼                                   ┌──────┴───────┐
 ┌──────────────┐                           │     Bot      │
 │ TimescaleDB  │                           │ Orchestrator │
-│ (Telemetry)  │                           │  (Phases)    │
+│ (Telemetry)  │                           │   (Phases)   │
 └──────────────┘                           └──────────────┘
 ```
 
+---
+
 ## Tech Stack
 
-| Component          | Technology                 | Rationale                              |
-|--------------------|----------------------------|----------------------------------------|
-| **Language**        | Go 1.22                    | Goroutine-based concurrency, low GC    |
-| **Streaming**       | Redpanda                   | C++ single-binary, <1ms tail latency   |
-| **Time-Series**     | TimescaleDB                | Continuous aggregates, compression     |
-| **Leaderboard**     | Redis Sorted Sets          | O(log N) ZADD, Pub/Sub for WebSocket   |
-| **Object Store**    | MinIO (S3-compat)          | Submission archive storage             |
-| **Sandboxing**      | gVisor + Kaniko            | User-space kernel + rootless builds    |
-| **Orchestration**   | Kubernetes                 | Per-submission namespaces, KEDA        |
-| **IaC**             | Terraform + Helm           | GKE, Cloud SQL, Memorystore            |
-| **Frontend**        | React + Vite + Recharts    | Real-time WebSocket leaderboard        |
+| Component | Technology | Rationale |
+| :--- | :--- | :--- |
+| **Backend Core** | C++20 / Drogon Framework | Extremely low overhead, high concurrency, and sub-millisecond response latencies. |
+| **Streaming** | Redpanda (Kafka-compatible)| Low-latency message brokerage for telemetry streams. |
+| **Time-Series** | TimescaleDB | Multi-dimensional partitioning and time-series aggregation for logs. |
+| **Leaderboard** | Redis Sorted Sets | `O(log N)` standings computation and sub-millisecond Pub/Sub propagation. |
+| **Object Store** | MinIO (S3-compatible) / GCS | Secure binary archive storage. |
+| **Sandboxing** | gVisor (GKE Sandbox) | Strong syscall interception and user-space kernel isolation. |
+| **Orchestration**| Kubernetes | Scalable orchestration for runners, isolated namespaces, and network policies. |
+| **IaC** | Terraform + Helm | Declarative VPC, Cloud NAT, GKE and Helm-driven chart deployments. |
+| **Frontend** | React + Vite + Recharts | Responsive, WebSocket-driven live-graph scoreboard. |
 
-## Quick Start
+---
+
+## Local Quick Start
 
 ### Prerequisites
-- Go 1.22+
+- GCC 11+ or Clang 13+ (supporting C++20)
+- CMake 3.22+
+- `vcpkg` package manager (configured and added to path)
 - Docker & Docker Compose
 - Node.js 18+
 
-### 1. Start Infrastructure
+### 1. Start Local Infrastructure
+Start PostgreSQL, TimescaleDB, Redis, Redpanda, and MinIO:
 ```bash
 make up
 ```
-This starts PostgreSQL, TimescaleDB, Redis, Redpanda, and MinIO locally.
 
-### 2. Run the Demo
+### 2. Build the C++ Backend Services
+Compile the microservices via CMake (auto-detects `vcpkg` toolchain):
+```bash
+# Optional: Set toolchain location if not auto-detected
+# export VCPKG_TOOLCHAIN="/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake"
+
+make build
+```
+
+### 3. Run the E2E Demo
+Start a mock contestant exchange, launch all services, run a 30-second load test, and output telemetry:
 ```bash
 make demo
 ```
-This script:
-1. Starts the Go exchange template (test target)
-2. Launches all platform services
-3. Triggers a 30-second benchmark with 50 bots
-4. Shows live telemetry output
 
-### 3. Start Frontend
+### 4. Start the Frontend Dashboard
 ```bash
-cd frontend && npm install && npm run dev
+cd frontend
+npm install
+npm run dev
 ```
-Open http://localhost:3000 for the live leaderboard.
+Open [http://localhost:3000](http://localhost:3000) to view the live dashboard.
 
-## Project Structure
+---
 
-```
-trading-platform/
-├── services/              # Go microservices
-│   ├── gateway/           # API reverse proxy (port 8090)
-│   ├── submission-svc/    # Code upload & storage (port 8091)
-│   ├── bot-orchestrator/  # Benchmark coordination (port 8092)
-│   ├── leaderboard-svc/   # WebSocket leaderboard (port 8093)
-│   ├── scoring-engine/    # Telemetry aggregation (port 8094)
-│   ├── sandbox-mgr/       # Container build & deploy (port 8095)
-│   └── bot-worker/        # Trading bot fleet (no HTTP)
-├── pkg/                   # Shared Go packages
-│   ├── models/            # Domain types (Order, Telemetry, etc.)
-│   ├── orderbook/         # Reference order book for validation
-│   ├── telemetry/         # Topic names & event types
-│   └── botprofiles/       # Predefined bot strategies
-├── templates/
-│   └── go-exchange/       # Sample contestant exchange
-├── frontend/              # React real-time dashboard
-├── deploy/
-│   ├── docker-compose.yml # Local dev infrastructure
-│   ├── dockerfiles/       # Service Dockerfiles
-│   ├── migrations/        # SQL migrations
-│   ├── terraform/         # GKE/GCP provisioning
-│   └── helm/              # Kubernetes deployment
-├── scripts/
-│   └── run-demo.sh        # End-to-end demo script
-├── go.work                # Go workspace
-└── Makefile               # Build/test/deploy commands
-```
+## Development & Utility Commands
+
+Use the provided `Makefile` to simplify C++ building and running:
+
+*   **Build a specific service**:
+    ```bash
+    make build-gateway
+    make build-scoring-engine
+    ```
+*   **Compile and run a service locally**:
+    ```bash
+    make dev-gateway
+    make dev-submission-svc
+    ```
+*   **Run unit tests**:
+    ```bash
+    make test
+    ```
+*   **Clean build targets & docker volumes**:
+    ```bash
+    make clean
+    ```
+
+---
+
+## Production Cloud Deployment (GCP / GKE)
+
+The platform is designed to deploy to Google Cloud Platform with strict contestant sandboxing. Files are located in `deploy/gcp/`.
+
+### Deployment Steps:
+1. **Configure gcloud SDK**:
+   Ensure you have authenticated with your GCP project:
+   ```bash
+   gcloud auth login
+   gcloud config set project YOUR_PROJECT_ID
+   ```
+2. **Launch Deployment Script**:
+   The automated script handles Terraform configuration, GKE provisioning, Secrets creation, Network Policy binding, and Helm application:
+   ```bash
+   cd deploy/gcp
+   ./deploy_cloud.sh
+   ```
+
+*Detailed cloud documentation is available in the [GCP Deployment Implementation Plan](deploy/gcp/README.md) or [Technical Design Submission Document](docs/hackathon_design_submission.md).*
+
+---
 
 ## Scoring Formula
 
-```
-Composite = 0.4 × Latency + 0.3 × Throughput + 0.3 × Correctness
-```
+A contestant's composite score $S_c$ is calculated as:
 
-- **Latency** (40%): `min(1.0, 100ms / p99_latency_ms)` — Lower is better
-- **Throughput** (30%): `min(1.0, max_tps / 10000)` — Higher is better
-- **Correctness** (30%): `successful_orders / total_orders` — Price-time priority validation
+$$S_c = 0.4 \cdot S_{\text{latency}} + 0.3 \cdot S_{\text{throughput}} + 0.3 \cdot S_{\text{correctness}}$$
+
+Where:
+*   **Latency ($S_{\text{latency}}$)**: Evaluated using HDR Histograms at the 99th percentile ($P_{99}$).
+    $$S_{\text{latency}} = \min\left(1.0, \frac{100\text{ ms}}{P_{99} \text{ Latency}}\right)$$
+*   **Throughput ($S_{\text{throughput}}$)**: Rolling peak Transaction Per Second (TPS) scaled against target TPS.
+    $$S_{\text{throughput}} = \min\left(1.0, \frac{\text{Peak TPS}}{10,000}\right)$$
+*   **Correctness ($S_{\text{correctness}}$)**: Ratio of filled orders that matched the reference order book validation checks.
+    $$S_{\text{correctness}} = \frac{\text{Valid Orders}}{\text{Total Orders}}$$
+
+---
 
 ## API Endpoints
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
+|:---|:---|:---|
 | `POST` | `/api/v1/submissions` | Upload exchange code (.tar.gz) |
 | `GET` | `/api/v1/submissions/{id}` | Get submission status |
-| `POST` | `/api/v1/submissions/{id}/benchmark` | Trigger benchmark run |
+| `POST` | `/api/v1/submissions/{id}/benchmark`| Trigger benchmark run |
 | `GET` | `/api/v1/leaderboard` | Get current leaderboard (JSON) |
-| `WS` | `/api/v1/leaderboard/stream` | Live leaderboard updates |
+| `WS` | `/api/v1/leaderboard/stream` | Live leaderboard websocket updates |
 | `GET` | `/api/v1/telemetry/{run_id}` | Get run metrics |
-| `GET` | `/api/v1/telemetry/{run_id}/histogram` | Get latency distribution |
+| `GET` | `/api/v1/telemetry/{run_id}/histogram`| Get latency distribution |
+
+---
 
 ## License
 

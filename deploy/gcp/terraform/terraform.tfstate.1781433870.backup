@@ -1,0 +1,569 @@
+{
+  "version": 4,
+  "terraform_version": "1.15.6",
+  "serial": 16,
+  "lineage": "1c466f96-04a6-0884-70a3-92bffb9ff1ac",
+  "outputs": {},
+  "resources": [
+    {
+      "mode": "managed",
+      "type": "google_compute_firewall",
+      "name": "allow_internal",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "allow": [
+              {
+                "ports": [],
+                "protocol": "icmp"
+              },
+              {
+                "ports": [],
+                "protocol": "tcp"
+              },
+              {
+                "ports": [],
+                "protocol": "udp"
+              }
+            ],
+            "creation_timestamp": "2026-06-14T02:53:31.528-07:00",
+            "deny": [],
+            "description": "",
+            "destination_ranges": [],
+            "direction": "INGRESS",
+            "disabled": false,
+            "enable_logging": null,
+            "id": "projects/iicpc-summer-hackathn/global/firewalls/iicpc-allow-internal",
+            "log_config": [],
+            "name": "iicpc-allow-internal",
+            "network": "https://www.googleapis.com/compute/v1/projects/iicpc-summer-hackathn/global/networks/iicpc-vpc",
+            "priority": 1000,
+            "project": "iicpc-summer-hackathn",
+            "self_link": "https://www.googleapis.com/compute/v1/projects/iicpc-summer-hackathn/global/firewalls/iicpc-allow-internal",
+            "source_ranges": [
+              "10.0.0.0/16",
+              "10.1.0.0/16",
+              "10.2.0.0/20"
+            ],
+            "source_service_accounts": [],
+            "source_tags": [],
+            "target_service_accounts": [],
+            "target_tags": [],
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH0sInNjaGVtYV92ZXJzaW9uIjoiMSJ9",
+          "dependencies": [
+            "google_compute_network.vpc",
+            "google_project_service.compute"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_compute_network",
+      "name": "vpc",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "auto_create_subnetworks": false,
+            "delete_default_routes_on_create": false,
+            "description": "",
+            "enable_ula_internal_ipv6": false,
+            "gateway_ipv4": "",
+            "id": "projects/iicpc-summer-hackathn/global/networks/iicpc-vpc",
+            "internal_ipv6_range": "",
+            "mtu": 0,
+            "name": "iicpc-vpc",
+            "network_firewall_policy_enforcement_order": "AFTER_CLASSIC_FIREWALL",
+            "numeric_id": "7053167061404730603",
+            "project": "iicpc-summer-hackathn",
+            "routing_mode": "REGIONAL",
+            "self_link": "https://www.googleapis.com/compute/v1/projects/iicpc-summer-hackathn/global/networks/iicpc-vpc",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.compute"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_compute_router",
+      "name": "router",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "bgp": [],
+            "creation_timestamp": "2026-06-14T02:53:32.555-07:00",
+            "description": "",
+            "encrypted_interconnect_router": false,
+            "id": "projects/iicpc-summer-hackathn/regions/us-central1/routers/iicpc-router",
+            "name": "iicpc-router",
+            "network": "https://www.googleapis.com/compute/v1/projects/iicpc-summer-hackathn/global/networks/iicpc-vpc",
+            "project": "iicpc-summer-hackathn",
+            "region": "us-central1",
+            "self_link": "https://www.googleapis.com/compute/v1/projects/iicpc-summer-hackathn/regions/us-central1/routers/iicpc-router",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_compute_network.vpc",
+            "google_project_service.compute"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_compute_router_nat",
+      "name": "nat",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "auto_network_tier": "PREMIUM",
+            "drain_nat_ips": [],
+            "enable_dynamic_port_allocation": false,
+            "enable_endpoint_independent_mapping": false,
+            "endpoint_types": [
+              "ENDPOINT_TYPE_VM"
+            ],
+            "icmp_idle_timeout_sec": 30,
+            "id": "iicpc-summer-hackathn/us-central1/iicpc-router/iicpc-nat",
+            "log_config": [],
+            "max_ports_per_vm": 0,
+            "min_ports_per_vm": 0,
+            "name": "iicpc-nat",
+            "nat_ip_allocate_option": "AUTO_ONLY",
+            "nat_ips": [],
+            "project": "iicpc-summer-hackathn",
+            "region": "us-central1",
+            "router": "iicpc-router",
+            "rules": [],
+            "source_subnetwork_ip_ranges_to_nat": "ALL_SUBNETWORKS_ALL_IP_RANGES",
+            "subnetwork": [],
+            "tcp_established_idle_timeout_sec": 1200,
+            "tcp_time_wait_timeout_sec": 120,
+            "tcp_transitory_idle_timeout_sec": 30,
+            "timeouts": null,
+            "udp_idle_timeout_sec": 30
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_compute_network.vpc",
+            "google_compute_router.router",
+            "google_project_service.compute"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_compute_subnetwork",
+      "name": "subnet",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "creation_timestamp": "2026-06-14T02:53:32.919-07:00",
+            "description": "",
+            "external_ipv6_prefix": "",
+            "fingerprint": null,
+            "gateway_address": "10.0.0.1",
+            "id": "projects/iicpc-summer-hackathn/regions/us-central1/subnetworks/iicpc-subnet",
+            "internal_ipv6_prefix": "",
+            "ip_cidr_range": "10.0.0.0/16",
+            "ipv6_access_type": "",
+            "ipv6_cidr_range": "",
+            "log_config": [],
+            "name": "iicpc-subnet",
+            "network": "https://www.googleapis.com/compute/v1/projects/iicpc-summer-hackathn/global/networks/iicpc-vpc",
+            "private_ip_google_access": true,
+            "private_ipv6_google_access": "DISABLE_GOOGLE_ACCESS",
+            "project": "iicpc-summer-hackathn",
+            "purpose": "PRIVATE",
+            "region": "us-central1",
+            "role": "",
+            "secondary_ip_range": [
+              {
+                "ip_cidr_range": "10.1.0.0/16",
+                "range_name": "k8s-pod-range"
+              },
+              {
+                "ip_cidr_range": "10.2.0.0/20",
+                "range_name": "k8s-svc-range"
+              }
+            ],
+            "self_link": "https://www.googleapis.com/compute/v1/projects/iicpc-summer-hackathn/regions/us-central1/subnetworks/iicpc-subnet",
+            "send_secondary_ip_range_if_empty": null,
+            "stack_type": "IPV4_ONLY",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_compute_network.vpc",
+            "google_project_service.compute"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_container_cluster",
+      "name": "primary",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 2,
+          "attributes": {
+            "addons_config": [
+              {
+                "cloudrun_config": [],
+                "config_connector_config": [],
+                "dns_cache_config": [
+                  {
+                    "enabled": true
+                  }
+                ],
+                "gce_persistent_disk_csi_driver_config": [
+                  {
+                    "enabled": true
+                  }
+                ],
+                "gcp_filestore_csi_driver_config": [],
+                "gcs_fuse_csi_driver_config": [],
+                "gke_backup_agent_config": [],
+                "horizontal_pod_autoscaling": [],
+                "http_load_balancing": [],
+                "network_policy_config": [
+                  {
+                    "disabled": true
+                  }
+                ],
+                "ray_operator_config": [],
+                "stateful_ha_config": []
+              }
+            ],
+            "allow_net_admin": null,
+            "authenticator_groups_config": [],
+            "binary_authorization": [
+              {
+                "enabled": false,
+                "evaluation_mode": ""
+              }
+            ],
+            "cluster_autoscaling": [
+              {
+                "auto_provisioning_defaults": [],
+                "auto_provisioning_locations": [],
+                "autoscaling_profile": "BALANCED",
+                "enabled": false,
+                "resource_limits": []
+              }
+            ],
+            "cluster_ipv4_cidr": "10.1.0.0/16",
+            "confidential_nodes": [],
+            "cost_management_config": [],
+            "database_encryption": [
+              {
+                "key_name": "",
+                "state": "DECRYPTED"
+              }
+            ],
+            "datapath_provider": "ADVANCED_DATAPATH",
+            "default_max_pods_per_node": 110,
+            "default_snat_status": [
+              {
+                "disabled": false
+              }
+            ],
+            "deletion_protection": false,
+            "description": "",
+            "dns_config": [],
+            "enable_autopilot": false,
+            "enable_cilium_clusterwide_network_policy": false,
+            "enable_intranode_visibility": false,
+            "enable_k8s_beta_apis": [],
+            "enable_kubernetes_alpha": false,
+            "enable_l4_ilb_subsetting": false,
+            "enable_legacy_abac": false,
+            "enable_multi_networking": false,
+            "enable_shielded_nodes": true,
+            "enable_tpu": false,
+            "endpoint": "34.66.182.58",
+            "fleet": [],
+            "gateway_api_config": [],
+            "id": "projects/iicpc-summer-hackathn/locations/us-central1/clusters/iicpc-cluster",
+            "identity_service_config": [],
+            "initial_node_count": 1,
+            "ip_allocation_policy": [
+              {
+                "additional_pod_ranges_config": [],
+                "cluster_ipv4_cidr_block": "10.1.0.0/16",
+                "cluster_secondary_range_name": "k8s-pod-range",
+                "pod_cidr_overprovision_config": [
+                  {
+                    "disabled": false
+                  }
+                ],
+                "services_ipv4_cidr_block": "10.2.0.0/20",
+                "services_secondary_range_name": "k8s-svc-range",
+                "stack_type": "IPV4"
+              }
+            ],
+            "label_fingerprint": "a9dc16a7",
+            "location": "us-central1",
+            "logging_config": [
+              {
+                "enable_components": [
+                  "SYSTEM_COMPONENTS",
+                  "WORKLOADS"
+                ]
+              }
+            ],
+            "logging_service": "logging.googleapis.com/kubernetes",
+            "maintenance_policy": [],
+            "master_auth": [
+              {
+                "client_certificate": "",
+                "client_certificate_config": [
+                  {
+                    "issue_client_certificate": false
+                  }
+                ],
+                "client_key": "",
+                "cluster_ca_certificate": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVMVENDQXBXZ0F3SUJBZ0lSQUtuWThOUC9XQkZvWDVYYlY0QVl6dDB3RFFZSktvWklodmNOQVFFTEJRQXcKTHpFdE1Dc0dBMVVFQXhNa09Ua3dOV0k0WTJVdE16QTRaaTAwTlRneUxUZzNaR1l0TVRFME9XSTNZbVl4TmpVMQpNQ0FYRFRJMk1EWXhOREE1TVRNME5Wb1lEekl3TlRZd05qQTJNVEF4TXpRMVdqQXZNUzB3S3dZRFZRUURFeVE1Ck9UQTFZamhqWlMwek1EaG1MVFExT0RJdE9EZGtaaTB4TVRRNVlqZGlaakUyTlRVd2dnR2lNQTBHQ1NxR1NJYjMKRFFFQkFRVUFBNElCandBd2dnR0tBb0lCZ1FERFpyZTVtOUZwTnRLRHlyeVhqYzcyRE1JZEl0QlVsdWV6ZzhnRwpxU09EL3RvQUZwTHRkSjFpWDlkSTFqT01pckFuQXNlM05tYlh0eUdhdS9USXI0Q3VycXd3ZkxvTmVlekUyNndaCktsMmlrMDhzcGloeVZkdEU1RlZ1U3pxbjd4YndjYVRuNEdiUFc4SEhBQk9uVDQ1aTMrSFB5dlZJaFFBY1NWQk0KdFRGT3dFeUhaZ2I1OFh6MjhCL284WkVaNmFuSmxvN2Qwc1JJSmNIdGQ2QWRuN3dRTlF0dmpHOHd2Z2V6SGZHcAowWnFNSlREcXFSVDU0M3c2WkpMSFBuaWdqOGJ5N3duOHFmUDRXUjdFVDF5N08zb0NQZTQ1NDR1ekQ5c0x3QTh3ClF4OExoUWNLZlZwK04veXI0SU1sZStWNWc1WW4wMlJWZHFVaW52MWt6RkluUGExTDBJc1Q4bEhIMER2dnFPcm8KRlV3WTVNRUFzMDJFMlNrd2FyMTAwdWdYazlkcjBwVElBN2hZTmgwU1RTOXU3OURYWlJ3MW8rNS9mZXdOeDRpcgpMa1ZaWHp1KzdTamYrMk92RTJXVi9aVTBVdi9oOWVkOHV4V1VPaUxlZStMSlNJbmNnbm80QWRVazdVdHllN3Y1CkhyTU5TWVV1bTF4RDVTQ2NIcVE0T2g4QnRxTUNBd0VBQWFOQ01FQXdEZ1lEVlIwUEFRSC9CQVFEQWdJRU1BOEcKQTFVZEV3RUIvd1FGTUFNQkFmOHdIUVlEVlIwT0JCWUVGSzFpcGJPYnFHbWpoL2Q5KzRsYVZmc2ZRSlVlTUEwRwpDU3FHU0liM0RRRUJDd1VBQTRJQmdRQ3Ivdy9mOUVQSzJBMHVGSmZUK21RYzNoekkwWDhFZnh4UlduTXVVOEdsCjZkNzF3K1hYTGRHSm5OYk92YXdRanFQVjZMc3drQXNwWkVXN1BmMXFLejBPaGxrQ2d6WDFGa2JBaFp3aityN3kKK0s4SnVTS1QwYmg2OWVFcUI3V09WUVYwN3U3ZFBRN2xFZU9QNUNSTitFdlV6WndQV2lhV0JQV3JOOFhDeWxzbAo5cFRFQW56QmdnWkZTdjBIWTVEbGVuemVHNUF1T0Z2dktTQW51RktRZGljck5aOXFqQ2laQ1RkTXpkUDRCT25YCmJOa2NJWHZJMVpwYXVuQi9tZU5SdnkxdU5nUTZzRmZJd3kyWkxVYW5wOXk2R056d2RXQTNtdUtXVklyYU9KZWQKM3lZRTdiRFlhaUQ5QzRIY2w0aTZsZ3BVMC9YMnhCS3RnYWhNYW91QWhjekh0ZUhaS1dqc3FRclNoTStCVEYyVQpMdzNYQ1NRZTRhTlRoa25pSmFRTHZJbk01NGVLU0kyczNOTi80dU9nWmYvTHptNGpFazJhdEd1M1M1V2cxQzZjCjlNMnV1czUwc2svT2tQQWpibGs2NlgyZ24xT0QwZGpEQ3lpb1NiNjBWRzRyL3FMZkdVTGh3STBSSVNvWnlTWXoKYlZIb3Rzb1RqTTlTWXgzSjliYndNL2c9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K"
+              }
+            ],
+            "master_authorized_networks_config": [],
+            "master_version": "1.35.5-gke.1000000",
+            "mesh_certificates": [],
+            "min_master_version": null,
+            "monitoring_config": [
+              {
+                "advanced_datapath_observability_config": [
+                  {
+                    "enable_metrics": false,
+                    "enable_relay": false,
+                    "relay_mode": "DISABLED"
+                  }
+                ],
+                "enable_components": [
+                  "SYSTEM_COMPONENTS",
+                  "STORAGE",
+                  "HPA",
+                  "POD",
+                  "DAEMONSET",
+                  "DEPLOYMENT",
+                  "STATEFULSET",
+                  "CADVISOR",
+                  "KUBELET",
+                  "DCGM",
+                  "JOBSET"
+                ],
+                "managed_prometheus": [
+                  {
+                    "enabled": true
+                  }
+                ]
+              }
+            ],
+            "monitoring_service": "monitoring.googleapis.com/kubernetes",
+            "name": "iicpc-cluster",
+            "network": "projects/iicpc-summer-hackathn/global/networks/iicpc-vpc",
+            "network_policy": [
+              {
+                "enabled": false,
+                "provider": "PROVIDER_UNSPECIFIED"
+              }
+            ],
+            "networking_mode": "VPC_NATIVE",
+            "node_config": [],
+            "node_locations": [
+              "us-central1-a",
+              "us-central1-c",
+              "us-central1-f"
+            ],
+            "node_pool": [],
+            "node_pool_auto_config": [
+              {
+                "network_tags": [],
+                "node_kubelet_config": [
+                  {
+                    "insecure_kubelet_readonly_port_enabled": "FALSE"
+                  }
+                ],
+                "resource_manager_tags": {}
+              }
+            ],
+            "node_pool_defaults": [
+              {
+                "node_config_defaults": [
+                  {
+                    "containerd_config": [],
+                    "insecure_kubelet_readonly_port_enabled": "FALSE",
+                    "logging_variant": "DEFAULT"
+                  }
+                ]
+              }
+            ],
+            "node_version": "1.35.5-gke.1000000",
+            "notification_config": [
+              {
+                "pubsub": [
+                  {
+                    "enabled": false,
+                    "filter": [],
+                    "topic": ""
+                  }
+                ]
+              }
+            ],
+            "operation": null,
+            "private_cluster_config": [
+              {
+                "enable_private_endpoint": false,
+                "enable_private_nodes": true,
+                "master_global_access_config": [
+                  {
+                    "enabled": false
+                  }
+                ],
+                "master_ipv4_cidr_block": "172.16.0.0/28",
+                "peering_name": "",
+                "private_endpoint": "172.16.0.2",
+                "private_endpoint_subnetwork": "",
+                "public_endpoint": "34.66.182.58"
+              }
+            ],
+            "private_ipv6_google_access": "",
+            "project": "iicpc-summer-hackathn",
+            "release_channel": [
+              {
+                "channel": "REGULAR"
+              }
+            ],
+            "remove_default_node_pool": true,
+            "resource_labels": null,
+            "resource_usage_export_config": [],
+            "security_posture_config": [
+              {
+                "mode": "BASIC",
+                "vulnerability_mode": "VULNERABILITY_MODE_UNSPECIFIED"
+              }
+            ],
+            "self_link": "https://container.googleapis.com/v1/projects/iicpc-summer-hackathn/locations/us-central1/clusters/iicpc-cluster",
+            "service_external_ips_config": [
+              {
+                "enabled": false
+              }
+            ],
+            "services_ipv4_cidr": "10.2.0.0/20",
+            "subnetwork": "projects/iicpc-summer-hackathn/regions/us-central1/subnetworks/iicpc-subnet",
+            "timeouts": null,
+            "tpu_ipv4_cidr_block": "",
+            "vertical_pod_autoscaling": [],
+            "workload_identity_config": [
+              {
+                "workload_pool": "iicpc-summer-hackathn.svc.id.goog"
+              }
+            ]
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "master_auth"
+              },
+              {
+                "type": "index",
+                "value": {
+                  "value": 0,
+                  "type": "number"
+                }
+              },
+              {
+                "type": "get_attr",
+                "value": "client_key"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoyNDAwMDAwMDAwMDAwLCJkZWxldGUiOjI0MDAwMDAwMDAwMDAsInJlYWQiOjI0MDAwMDAwMDAwMDAsInVwZGF0ZSI6MzYwMDAwMDAwMDAwMH0sInNjaGVtYV92ZXJzaW9uIjoiMiJ9",
+          "dependencies": [
+            "google_compute_network.vpc",
+            "google_compute_subnetwork.subnet",
+            "google_project_service.compute",
+            "google_project_service.container"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_project_service",
+      "name": "compute",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "iicpc-summer-hackathn/compute.googleapis.com",
+            "project": "iicpc-summer-hackathn",
+            "service": "compute.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_project_service",
+      "name": "container",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "iicpc-summer-hackathn/container.googleapis.com",
+            "project": "iicpc-summer-hackathn",
+            "service": "container.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}
