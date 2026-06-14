@@ -13,12 +13,6 @@ provider "google" {
   zone    = var.zone
 }
 
-provider "google-beta" {
-  project = var.project_id
-  region  = var.region
-  zone    = var.zone
-}
-
 # --- APIs ---
 resource "google_project_service" "compute" {
   project            = var.project_id
@@ -120,7 +114,6 @@ resource "google_container_cluster" "primary" {
 
 # --- GKE Node Pool ---
 resource "google_container_node_pool" "primary_nodes" {
-  provider   = google-beta
   name       = "primary-node-pool"
   location   = var.region
   cluster    = google_container_cluster.primary.name
