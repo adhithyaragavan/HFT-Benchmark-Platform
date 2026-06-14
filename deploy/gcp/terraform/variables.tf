@@ -39,3 +39,9 @@ variable "max_nodes" {
   type        = number
   default     = 10
 }
+
+variable "access_token" {
+  description = "The GCP OAuth2 access token to authenticate providers."
+  type        = string
+  default     = null
+}

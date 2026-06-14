@@ -7,10 +7,15 @@ set -e
 
 echo "🚀 Initiating Cloud Deployment for IICPC Platform..."
 
+# Automatically retrieve and export OAuth token for Terraform (both google & google-beta) and CLI tools
+export GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token)
+export TF_VAR_access_token=$GOOGLE_OAUTH_ACCESS_TOKEN
+
 # 1. Provision Infrastructure via Terraform
 echo "📦 Step 1: Provisioning Infrastructure via Terraform..."
 cd terraform
-terraform init
+# Re-run init to ensure the google-beta provider is downloaded and updated
+terraform init -upgrade
 terraform apply -auto-approve
 cd ..
 

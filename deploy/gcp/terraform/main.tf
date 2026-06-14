@@ -4,13 +4,25 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 5.0"
     }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 5.0"
+    }
   }
 }
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
-  zone    = var.zone
+  project      = var.project_id
+  region       = var.region
+  zone         = var.zone
+  access_token = var.access_token
+}
+
+provider "google-beta" {
+  project      = var.project_id
+  region       = var.region
+  zone         = var.zone
+  access_token = var.access_token
 }
 
 # --- APIs ---
@@ -114,6 +126,7 @@ resource "google_container_cluster" "primary" {
 
 # --- GKE Node Pool ---
 resource "google_container_node_pool" "primary_nodes" {
+  provider   = google-beta
   name       = "primary-node-pool"
   location   = var.region
   cluster    = google_container_cluster.primary.name
