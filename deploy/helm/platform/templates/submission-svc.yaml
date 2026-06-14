@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: submission-svc
+  namespace: platform
+  labels:
+    app: submission-svc
+spec:
+  replicas: {{ .Values.submissionSvc.replicas }}
+  selector:
+    matchLabels:
+      app: submission-svc
+  template:
+    metadata:
+      labels:
+        app: submission-svc
+    spec:
+      containers:
+      - name: submission-svc
+        image: "{{ .Values.global.imageRegistry }}{{ .Values.submissionSvc.image.repository }}:{{ .Values.submissionSvc.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: {{ .Values.submissionSvc.port }}
+          name: http
+        env:
+        - name: SUBMISSION_PORT
+          value: "{{ .Values.submissionSvc.port }}"
+        - name: DATABASE_URL
+          value: "postgres://{{ .Values.database.user }}:$(DB_PASSWORD)@{{ .Values.database.host | default "platform-postgres" }}:{{ .Values.database.port }}/{{ .Values.database.name }}"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.database.passwordSecret }}
+              key: password
+              optional: true
+        - name: MINIO_ENDPOINT
+          value: "{{ .Values.minio.endpoint | default "platform-minio:9000" }}"
+        - name: MINIO_ACCESS_KEY
+          value: "minioadmin"
+        - name: MINIO_SECRET_KEY
+          value: "minioadmin"
+        - name: REDIS_URL
+          value: "tcp://{{ .Values.redis.host | default "platform-redis" }}:{{ .Values.redis.port }}"
+        - name: REDPANDA_BROKERS
+          value: "{{ .Values.redpanda.host | default "platform-redpanda:9092" }}"
+        - name: DISABLE_CLAMAV
+          value: "true"
+        resources:
+          {{- toYaml .Values.submissionSvc.resources | nindent 10 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: submission-svc
+  namespace: platform
+  labels:
+    app: submission-svc
+spec:
+  type: ClusterIP
+  ports:
+  - port: {{ .Values.submissionSvc.port }}
+    targetPort: {{ .Values.submissionSvc.port }}
+    protocol: TCP
+    name: http
+  selector:
+    app: submission-svc

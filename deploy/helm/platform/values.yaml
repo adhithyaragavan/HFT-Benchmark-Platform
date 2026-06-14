@@ -1,0 +1,156 @@
+# ============================================================================
+# Default values for the Benchmark Platform Helm chart
+# ============================================================================
+
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# ─── Gateway ─────────────────────────────────────────────────────────
+gateway:
+  replicas: 2
+  image:
+    repository: platform/gateway
+    tag: latest
+  port: 8090
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# ─── Submission Service ──────────────────────────────────────────────
+submissionSvc:
+  replicas: 2
+  image:
+    repository: platform/submission-svc
+    tag: latest
+  port: 8091
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+
+# ─── Sandbox Manager ─────────────────────────────────────────────────
+sandboxMgr:
+  replicas: 1
+  image:
+    repository: platform/sandbox-mgr
+    tag: latest
+  port: 8095
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2
+      memory: 2Gi
+
+# ─── Bot Orchestrator ─────────────────────────────────────────────────
+botOrchestrator:
+  replicas: 1
+  image:
+    repository: platform/bot-orchestrator
+    tag: latest
+  port: 8092
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+
+# ─── Bot Worker ──────────────────────────────────────────────────────
+botWorker:
+  replicas: 3
+  maxBotsPerWorker: 1000
+  image:
+    repository: platform/bot-worker
+    tag: latest
+  resources:
+    requests:
+      cpu: 2
+      memory: 2Gi
+    limits:
+      cpu: 4
+      memory: 4Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 20
+    targetCPUUtilization: 70
+
+# ─── Scoring Engine ──────────────────────────────────────────────────
+scoringEngine:
+  replicas: 2
+  image:
+    repository: platform/scoring-engine
+    tag: latest
+  port: 8094
+  resources:
+    requests:
+      cpu: 1
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+
+# ─── Leaderboard Service ─────────────────────────────────────────────
+leaderboardSvc:
+  replicas: 2
+  image:
+    repository: platform/leaderboard-svc
+    tag: latest
+  port: 8093
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# ─── Contestant Sandboxing ───────────────────────────────────────────
+contestant:
+  runtimeClass: gvisor
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2
+      memory: 2Gi
+  networkPolicy:
+    enabled: true
+    denyEgress: true
+
+# ─── Redpanda ────────────────────────────────────────────────────────
+redpanda:
+  enabled: true
+  storage:
+    persistentVolume:
+      size: 20Gi
+
+# ─── Database ────────────────────────────────────────────────────────
+database:
+  host: ""
+  port: 5432
+  name: benchmarks
+  user: platform
+  passwordSecret: db-credentials
+
+timescaledb:
+  host: ""
+  port: 5432
+  name: telemetry
+  user: platform
+
+redis:
+  host: ""
+  port: 6379

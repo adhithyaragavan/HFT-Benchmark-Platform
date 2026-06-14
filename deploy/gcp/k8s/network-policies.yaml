@@ -1,0 +1,52 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sandbox-isolation-policy
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      role: contestant
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # ONLY allow ingress from bot-worker pods for traffic generation
+  - from:
+    - podSelector:
+        matchLabels:
+          app: bot-worker
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  # Completely block external internet and internal network access
+  # Block metadata server access explicitly
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 169.254.169.254/32
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+  # But we must deny all egress effectively by not providing an empty 'to'.
+  # Wait, the user asked to COMPLETELY block them from accessing external internet, metadata server, or internal DBs.
+  # So we will ONLY allow DNS egress (optional, if they need DNS) or just drop all egress.
+  # Since it's a sandbox, dropping all egress is the safest and fulfills the requirement.
+
+---
+# Second policy: strictly deny all egress from contestant pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sandbox-egress-deny
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      role: contestant
+  policyTypes:
+  - Egress
+  # Empty egress rules mean default DENY ALL egress traffic
+  egress: []

@@ -1,0 +1,15 @@
+{
+  "name": "trading-platform-cpp",
+  "version": "1.0.0",
+  "dependencies": [
+    "drogon",
+    "nlohmann-json",
+    "librdkafka",
+    "libpqxx",
+    "redis-plus-plus",
+    "aws-sdk-cpp",
+    "cppkafka",
+    "cpp-httplib",
+    "hiredis"
+  ]
+}

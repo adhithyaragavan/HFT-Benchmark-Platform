@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sandbox-mgr-sa
+  namespace: platform
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: sandbox-mgr-role
+rules:
+- apiGroups: [""]
+  resources: ["namespaces", "pods", "services", "resourcequotas"]
+  verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: sandbox-mgr-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: sandbox-mgr-sa
+  namespace: platform
+roleRef:
+  kind: ClusterRole
+  name: sandbox-mgr-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sandbox-mgr
+  namespace: platform
+  labels:
+    app: sandbox-mgr
+spec:
+  replicas: {{ .Values.sandboxMgr.replicas }}
+  selector:
+    matchLabels:
+      app: sandbox-mgr
+  template:
+    metadata:
+      labels:
+        app: sandbox-mgr
+    spec:
+      serviceAccountName: sandbox-mgr-sa
+      containers:
+      - name: sandbox-mgr
+        image: "{{ .Values.global.imageRegistry }}{{ .Values.sandboxMgr.image.repository }}:{{ .Values.sandboxMgr.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: {{ .Values.sandboxMgr.port }}
+          name: http
+        env:
+        - name: SANDBOX_PORT
+          value: "{{ .Values.sandboxMgr.port }}"
+        - name: SANDBOX_MODE
+          value: "k8s"
+        - name: IN_CLUSTER
+          value: "true"
+        - name: DATABASE_URL
+          value: "postgres://{{ .Values.database.user }}:$(DB_PASSWORD)@{{ .Values.database.host | default "platform-postgres" }}:{{ .Values.database.port }}/{{ .Values.database.name }}"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.database.passwordSecret }}
+              key: password
+              optional: true
+        - name: REGISTRY_URL
+          value: "{{ .Values.global.imageRegistry | default "us-central1-docker.pkg.dev/iicpc-2026/contestant-images" }}"
+        - name: RUNTIME_CLASS
+          value: "{{ .Values.contestant.runtimeClass | default "gvisor" }}"
+        - name: CPU_REQUEST
+          value: "{{ .Values.contestant.resources.requests.cpu | default "500m" }}"
+        - name: CPU_LIMIT
+          value: "{{ .Values.contestant.resources.limits.cpu | default "2" }}"
+        - name: MEMORY_REQUEST
+          value: "{{ .Values.contestant.resources.requests.memory | default "512Mi" }}"
+        - name: MEMORY_LIMIT
+          value: "{{ .Values.contestant.resources.limits.memory | default "2Gi" }}"
+        resources:
+          {{- toYaml .Values.sandboxMgr.resources | nindent 10 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sandbox-mgr
+  namespace: platform
+  labels:
+    app: sandbox-mgr
+spec:
+  type: ClusterIP
+  ports:
+  - port: {{ .Values.sandboxMgr.port }}
+    targetPort: {{ .Values.sandboxMgr.port }}
+    protocol: TCP
+    name: http
+  selector:
+    app: sandbox-mgr

@@ -1,0 +1,21 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: bot-worker-scaledobject
+  namespace: platform
+  labels:
+    app: bot-worker
+spec:
+  scaleTargetRef:
+    name: bot-worker
+  minReplicaCount: 1
+  maxReplicaCount: 100
+  cooldownPeriod:  30
+  pollingInterval:  5
+  triggers:
+  - type: kafka
+    metadata:
+      bootstrapServers: platform-redpanda.platform.svc.cluster.local:9092
+      topic: bot-commands
+      consumerGroup: bot-worker-group
+      lagThreshold: "10"

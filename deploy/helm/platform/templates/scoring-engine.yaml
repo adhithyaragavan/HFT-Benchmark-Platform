@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scoring-engine
+  namespace: platform
+  labels:
+    app: scoring-engine
+spec:
+  replicas: {{ .Values.scoringEngine.replicas }}
+  selector:
+    matchLabels:
+      app: scoring-engine
+  template:
+    metadata:
+      labels:
+        app: scoring-engine
+    spec:
+      containers:
+      - name: scoring-engine
+        image: "{{ .Values.global.imageRegistry }}{{ .Values.scoringEngine.image.repository }}:{{ .Values.scoringEngine.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: {{ .Values.scoringEngine.port }}
+          name: http
+        env:
+        - name: SCORING_PORT
+          value: "{{ .Values.scoringEngine.port }}"
+        - name: REDPANDA_BROKERS
+          value: "{{ .Values.redpanda.host | default "platform-redpanda:9092" }}"
+        - name: TELEMETRY_TOPIC
+          value: "telemetry-raw"
+        - name: CONSUMER_GROUP
+          value: "scoring-engine-group"
+        - name: TIMESCALEDB_URL
+          value: "postgres://{{ .Values.timescaledb.user | default "platform" }}:platform@{{ .Values.timescaledb.host | default "platform-timescaledb" }}:{{ .Values.timescaledb.port | default "5432" }}/{{ .Values.timescaledb.name | default "telemetry" }}"
+        - name: REDIS_ADDR
+          value: "{{ .Values.redis.host | default "platform-redis" }}:{{ .Values.redis.port | default "6379" }}"
+        resources:
+          {{- toYaml .Values.scoringEngine.resources | nindent 10 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scoring-engine
+  namespace: platform
+  labels:
+    app: scoring-engine
+spec:
+  type: ClusterIP
+  ports:
+  - port: {{ .Values.scoringEngine.port }}
+    targetPort: {{ .Values.scoringEngine.port }}
+    protocol: TCP
+    name: http
+  selector:
+    app: scoring-engine

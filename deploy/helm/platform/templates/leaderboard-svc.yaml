@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leaderboard-svc
+  namespace: platform
+  labels:
+    app: leaderboard-svc
+spec:
+  replicas: {{ .Values.leaderboardSvc.replicas }}
+  selector:
+    matchLabels:
+      app: leaderboard-svc
+  template:
+    metadata:
+      labels:
+        app: leaderboard-svc
+    spec:
+      containers:
+      - name: leaderboard-svc
+        image: "{{ .Values.global.imageRegistry }}{{ .Values.leaderboardSvc.image.repository }}:{{ .Values.leaderboardSvc.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: {{ .Values.leaderboardSvc.port }}
+          name: http
+        env:
+        - name: LEADERBOARD_PORT
+          value: "{{ .Values.leaderboardSvc.port }}"
+        - name: REDIS_ADDR
+          value: "{{ .Values.redis.host | default "platform-redis" }}:{{ .Values.redis.port | default "6379" }}"
+        resources:
+          {{- toYaml .Values.leaderboardSvc.resources | nindent 10 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: leaderboard-svc
+  namespace: platform
+  labels:
+    app: leaderboard-svc
+spec:
+  type: ClusterIP
+  ports:
+  - port: {{ .Values.leaderboardSvc.port }}
+    targetPort: {{ .Values.leaderboardSvc.port }}
+    protocol: TCP
+    name: http
+  selector:
+    app: leaderboard-svc

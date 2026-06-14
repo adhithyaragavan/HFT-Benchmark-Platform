@@ -1,0 +1,43 @@
+# Compiled binaries and build directories
+build/
+bin/
+publish_bin
+*.o
+*.a
+*.so
+*.dylib
+*.out
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs*.txt
+logs/
+
+# Node/Frontend dependencies
+node_modules/
+.eslintcache
+.next/
+out/
+dist/
+
+# Terraform/GCP state and keys
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfvars.json
+*._override.tf
+*._override.tf.json
+.terraform.lock.hcl
+secrets-*.yaml
+*.key
+*.pem
+
+# Application runtime uploads/temp
+uploads/
+temp/
+tmp/

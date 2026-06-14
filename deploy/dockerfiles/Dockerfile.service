@@ -1,0 +1,77 @@
+# ============================================================================
+# IICPC 2026 — Multi-stage Dockerfile for C++ microservices
+# Build: docker build --build-arg SERVICE=gateway -t platform-gateway -f deploy/dockerfiles/Dockerfile.service .
+# ============================================================================
+ARG SERVICE=gateway
+
+# ─── Build Stage ─────────────────────────────────────────────────────
+FROM ubuntu:22.04 AS builder
+ARG SERVICE
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies needed for compiling C++ and using vcpkg
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    curl \
+    zip \
+    unzip \
+    tar \
+    pkg-config \
+    libssl-dev \
+    uuid-dev \
+    zlib1g-dev \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install vcpkg
+WORKDIR /opt
+RUN git clone https://github.com/microsoft/vcpkg.git && \
+    ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+
+ENV VCPKG_ROOT=/opt/vcpkg
+ENV VCPKG_FORCE_SYSTEM_BINARIES=1
+
+# Copy build manifests first to compile and cache vcpkg dependencies
+WORKDIR /app
+COPY services/vcpkg.json services/vcpkg.json
+
+# Run a dummy configure to restore and build dependencies in manifest mode
+RUN echo "cmake_minimum_required(VERSION 3.20)\nproject(dummy)\nfind_package(nlohmann_json CONFIG REQUIRED)\nadd_executable(dummy dummy.cpp)" > /app/CMakeLists.txt && \
+    echo "int main() {}" > /app/dummy.cpp && \
+    cmake -B build -S . \
+        -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
+        -DVCPKG_MANIFEST_DIR=/app/services && \
+    rm -rf /app/CMakeLists.txt /app/dummy.cpp /app/build
+
+# Copy the actual workspace source code
+COPY CMakeLists.txt /app/
+COPY pkg/ /app/pkg/
+COPY services/ /app/services/
+COPY templates/ /app/templates/
+
+# Build the targeted service
+WORKDIR /app
+RUN cmake -B build -S . \
+    -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DVCPKG_MANIFEST_DIR=/app/services && \
+    cmake --build build --target ${SERVICE}
+
+# ─── Runtime Stage ───────────────────────────────────────────────────
+FROM ubuntu:22.04
+ARG SERVICE
+RUN apt-get update && apt-get install -y \
+    libssl3 \
+    ca-certificates \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /app/build/services/${SERVICE}/${SERVICE} /usr/local/bin/service
+
+USER 1001:1001
+EXPOSE 8080
+ENTRYPOINT ["/usr/local/bin/service"]

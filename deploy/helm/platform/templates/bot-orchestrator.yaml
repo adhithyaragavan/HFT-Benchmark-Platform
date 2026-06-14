@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bot-orchestrator
+  namespace: platform
+  labels:
+    app: bot-orchestrator
+spec:
+  replicas: {{ .Values.botOrchestrator.replicas }}
+  selector:
+    matchLabels:
+      app: bot-orchestrator
+  template:
+    metadata:
+      labels:
+        app: bot-orchestrator
+    spec:
+      containers:
+      - name: bot-orchestrator
+        image: "{{ .Values.global.imageRegistry }}{{ .Values.botOrchestrator.image.repository }}:{{ .Values.botOrchestrator.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: {{ .Values.botOrchestrator.port }}
+          name: http
+        env:
+        - name: ORCHESTRATOR_PORT
+          value: "{{ .Values.botOrchestrator.port }}"
+        - name: REDPANDA_BROKERS
+          value: "{{ .Values.redpanda.host | default "platform-redpanda:9092" }}"
+        - name: COMMAND_TOPIC
+          value: "bot-commands"
+        resources:
+          {{- toYaml .Values.botOrchestrator.resources | nindent 10 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bot-orchestrator
+  namespace: platform
+  labels:
+    app: bot-orchestrator
+spec:
+  type: ClusterIP
+  ports:
+  - port: {{ .Values.botOrchestrator.port }}
+    targetPort: {{ .Values.botOrchestrator.port }}
+    protocol: TCP
+    name: http
+  selector:
+    app: bot-orchestrator

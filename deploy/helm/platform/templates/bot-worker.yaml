@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bot-worker
+  namespace: platform
+  labels:
+    app: bot-worker
+spec:
+  replicas: {{ .Values.botWorker.replicas }}
+  selector:
+    matchLabels:
+      app: bot-worker
+  template:
+    metadata:
+      labels:
+        app: bot-worker
+    spec:
+      containers:
+      - name: bot-worker
+        image: "{{ .Values.global.imageRegistry }}{{ .Values.botWorker.image.repository }}:{{ .Values.botWorker.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: WORKER_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: REDPANDA_BROKERS
+          value: "{{ .Values.redpanda.host | default "platform-redpanda:9092" }}"
+        - name: COMMAND_TOPIC
+          value: "bot-commands"
+        - name: TELEMETRY_TOPIC
+          value: "telemetry-raw"
+        - name: MAX_BOTS_PER_WORKER
+          value: "{{ .Values.botWorker.maxBotsPerWorker | default "1000" }}"
+        - name: CONSUMER_GROUP
+          value: "bot-worker-group"
+        resources:
+          {{- toYaml .Values.botWorker.resources | nindent 10 }}

@@ -1,0 +1,17 @@
+# ============================================================================
+# IICPC 2026 — Distributed Benchmarking Platform
+# Helm Chart: Platform Services
+# ============================================================================
+
+apiVersion: v2
+name: benchmark-platform
+description: IICPC 2026 Exchange Benchmark Arena
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: redpanda
+    version: "5.x.x"
+    repository: https://charts.redpanda.com
+    condition: redpanda.enabled

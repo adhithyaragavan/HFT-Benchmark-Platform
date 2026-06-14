@@ -1,0 +1,96 @@
+# Production Overrides for IICPC Platform Helm Chart
+
+global:
+  imagePullSecrets:
+    - name: gcr-registry-secret
+  
+  # Externalized Production Databases & Queues
+  postgres:
+    enabled: false # Use external Cloud SQL or separate stateful set
+    host: "postgres-svc.database.svc.cluster.local"
+    port: 5432
+    user: "platform"
+    # The password will be read from the secret we generate in secrets-setup.sh
+    passwordSecret: "iicpc-db-credentials"
+    passwordSecretKey: "postgres-password"
+    dbName: "benchmarks"
+
+  redis:
+    enabled: false # Use external Memorystore or separate stateful set
+    host: "redis-svc.database.svc.cluster.local"
+    port: 6379
+    passwordSecret: "iicpc-db-credentials"
+    passwordSecretKey: "redis-password"
+
+  redpanda:
+    enabled: false # Use external cluster or separate stateful set
+    brokers: "redpanda-svc.messaging.svc.cluster.local:9092"
+    # SASL Authentication for external Kafka/Redpanda
+    sasl:
+      enabled: true
+      mechanism: "SCRAM-SHA-256"
+      userSecret: "iicpc-kafka-credentials"
+      userSecretKey: "username"
+      passwordSecret: "iicpc-kafka-credentials"
+      passwordSecretKey: "password"
+
+  minio:
+    enabled: false # Use GCP Cloud Storage (GCS) with S3 compatibility API
+    endpoint: "storage.googleapis.com"
+    port: 443
+    secure: true
+    accessKeySecret: "iicpc-storage-credentials"
+    accessKeySecretKey: "access-key"
+    secretKeySecret: "iicpc-storage-credentials"
+    secretKeySecretKey: "secret-key"
+    bucket: "iicpc-submissions-bucket"
+
+# Sub-charts or Microservice Env Injections
+submission-svc:
+  image:
+    repository: us-central1-docker.pkg.dev/iicpc-summer-hackathn/iicpc-repo/submission-svc
+    tag: latest
+  replicaCount: 2
+  resources:
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+
+bot-orchestrator:
+  image:
+    repository: us-central1-docker.pkg.dev/iicpc-summer-hackathn/iicpc-repo/bot-orchestrator
+    tag: latest
+  replicaCount: 1
+
+bot-worker:
+  image:
+    repository: us-central1-docker.pkg.dev/iicpc-summer-hackathn/iicpc-repo/bot-worker
+    tag: latest
+  # Autoscaling handled by HPA
+  replicaCount: 3
+
+scoring-engine:
+  image:
+    repository: us-central1-docker.pkg.dev/iicpc-summer-hackathn/iicpc-repo/scoring-engine
+    tag: latest
+  replicaCount: 2
+
+gateway:
+  image:
+    repository: us-central1-docker.pkg.dev/iicpc-summer-hackathn/iicpc-repo/gateway
+    tag: latest
+  service:
+    type: LoadBalancer # Exposes the API Gateway to the public internet
+    port: 8080
+    targetPort: 8080
+
+leaderboard-svc:
+  image:
+    repository: us-central1-docker.pkg.dev/iicpc-summer-hackathn/iicpc-repo/leaderboard-svc
+    tag: latest
+  service:
+    type: ClusterIP # Traefik or Gateway routes websocket to this
+    port: 8094
