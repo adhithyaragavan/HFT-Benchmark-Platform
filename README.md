@@ -131,14 +131,19 @@ The platform is designed to deploy to Google Cloud Platform with strict contesta
    gcloud auth login
    gcloud config set project YOUR_PROJECT_ID
    ```
-2. **Launch Deployment Script**:
+2. **Build and Push Microservices**:
+   Build the Docker images and push them to Google Artifact Registry:
+   ```bash
+   ./deploy/gcp/build_and_push.sh
+   ```
+3. **Launch Deployment Script**:
    The automated script handles Terraform configuration, GKE provisioning, Secrets creation, Network Policy binding, and Helm application:
    ```bash
    cd deploy/gcp
    ./deploy_cloud.sh
    ```
 
-*Detailed cloud documentation is available in the [GCP Deployment Implementation Plan](deploy/gcp/README.md) or [Technical Design Submission Document](docs/hackathon_design_submission.md).*
+*Detailed cloud documentation is available in the [Technical Design Submission Document](docs/hackathon_design_submission.md).*
 
 ---
 
