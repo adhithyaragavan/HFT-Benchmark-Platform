@@ -41,3 +41,4 @@ secrets-*.yaml
 uploads/
 temp/
 tmp/
+*.tfstate.*.backup

@@ -83,7 +83,7 @@ resource "google_compute_router_nat" "nat" {
 # --- GKE Cluster ---
 resource "google_container_cluster" "primary" {
   name     = var.cluster_name
-  location = var.region
+  location = var.zone  # Zonal cluster to fit within 12 vCPU project quota
   
   depends_on = [google_project_service.container]
 
@@ -128,13 +128,13 @@ resource "google_container_cluster" "primary" {
 resource "google_container_node_pool" "primary_nodes" {
   provider   = google-beta
   name       = "primary-node-pool"
-  location   = var.region
+  location   = var.zone
   cluster    = google_container_cluster.primary.name
   node_count = var.min_nodes
 
   autoscaling {
-    min_node_count = var.min_nodes
-    max_node_count = var.max_nodes
+    min_node_count = 1
+    max_node_count = 2
   }
 
   management {
@@ -147,10 +147,6 @@ resource "google_container_node_pool" "primary_nodes" {
     disk_size_gb = 50
     disk_type    = "pd-standard"
 
-    # Enable gVisor on the nodes
-    sandbox_config {
-      sandbox_type = "gvisor"
-    }
 
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
     oauth_scopes = [
@@ -181,4 +177,44 @@ resource "google_compute_firewall" "allow_internal" {
   }
 
   source_ranges = ["10.0.0.0/16", "10.1.0.0/16", "10.2.0.0/20"]
+}
+
+# --- GKE Sandbox Node Pool (For Contestant Pods) ---
+resource "google_container_node_pool" "sandbox_nodes" {
+  provider   = google-beta
+  name       = "sandbox-node-pool"
+  location   = var.zone
+  cluster    = google_container_cluster.primary.name
+  node_count = 1
+
+  autoscaling {
+    min_node_count = 1
+    max_node_count = 1
+  }
+
+  management {
+    auto_repair  = true
+    auto_upgrade = true
+  }
+
+  node_config {
+    machine_type = var.machine_type
+    disk_size_gb = 50
+    disk_type    = "pd-standard"
+
+    # Enable gVisor on the nodes
+    sandbox_config {
+      sandbox_type = "gvisor"
+    }
+
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
+    labels = {
+      env = "sandbox"
+    }
+
+    tags = ["gke-node", "sandbox-node"]
+  }
 }

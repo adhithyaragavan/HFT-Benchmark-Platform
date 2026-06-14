@@ -35,9 +35,9 @@ variable "min_nodes" {
 }
 
 variable "max_nodes" {
-  description = "Maximum number of nodes for autoscaling"
+  description = "Maximum number of nodes for autoscaling (capped to fit 12 vCPU project quota)"
   type        = number
-  default     = 10
+  default     = 3
 }
 
 variable "access_token" {

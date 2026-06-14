@@ -21,9 +21,9 @@ cd ..
 
 # Retrieve Cluster Credentials
 echo "🔑 Step 2: Fetching GKE Cluster Credentials..."
-CLUSTER_NAME=$(terraform -chdir=terraform output -raw cluster_name 2>/dev/null || echo "iicpc-cluster")
-REGION=$(terraform -chdir=terraform output -raw region 2>/dev/null || echo "us-central1")
-gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION
+CLUSTER_NAME="iicpc-cluster"
+ZONE="us-central1-a"
+gcloud container clusters get-credentials "$CLUSTER_NAME" --zone "$ZONE"
 
 # 2. Setup Kubernetes Secrets
 echo "🛡️ Step 3: Configuring Kubernetes Secrets..."
@@ -38,9 +38,10 @@ echo "⛵ Step 5: Deploying microservices via Helm..."
 # Note: Ensure you have built and pushed your images to Artifact Registry before this step!
 # Update the 'repository' fields in your Chart values to point to your GCP registry.
 
-helm upgrade --install iicpc-platform ../helm-chart \
+helm upgrade --install iicpc-platform ../helm/platform \
   -f helm/production-values.yaml \
-  --namespace default \
+  --namespace platform \
+  --create-namespace \
   --wait \
   --timeout 10m
 

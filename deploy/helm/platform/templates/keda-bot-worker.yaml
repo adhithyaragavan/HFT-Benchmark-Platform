@@ -1,3 +1,4 @@
+{{- if and .Values.botWorker .Values.botWorker.autoscaling .Values.botWorker.autoscaling.enabled }}
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
@@ -19,3 +20,4 @@ spec:
       topic: bot-commands
       consumerGroup: bot-worker-group
       lagThreshold: "10"
+{{- end }}

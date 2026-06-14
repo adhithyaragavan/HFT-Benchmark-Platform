@@ -37,11 +37,11 @@ for SERVICE in "${SERVICES[@]}"; do
   echo "------------------------------------------------------------"
   echo "📦 Processing $SERVICE..."
   
-  IMAGE_TAG="${REGISTRY}/${SERVICE}:latest"
+  IMAGE_TAG="${REGISTRY}/platform/${SERVICE}:latest"
   
   # Build the Docker image
   echo "🔨 Building $SERVICE..."
-  docker build -t "$IMAGE_TAG" -f "services/${SERVICE}/Dockerfile" .
+  docker build --build-arg SERVICE="${SERVICE}" -t "$IMAGE_TAG" -f "deploy/dockerfiles/Dockerfile.service" .
   
   # Push to Artifact Registry
   echo "☁️ Pushing $SERVICE to GCP..."

@@ -10,8 +10,6 @@ type: application
 version: 0.1.0
 appVersion: "1.0.0"
 
-dependencies:
-  - name: redpanda
-    version: "5.x.x"
-    repository: https://charts.redpanda.com
-    condition: redpanda.enabled
+
+# Note: Redpanda/Kafka is deployed externally in production.
+# For local dev, use docker-compose.
